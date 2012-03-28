@@ -174,6 +174,9 @@ void MMA8453_n0m1::dataMode(boolean highRes, int gScaleRange)
 	byte activeMask = 0x01;
 	byte resModeMask = 0x02;
 	
+	//setup i2c
+	I2c.begin();
+	
 	//register settings must be made in standby mode
 	I2c.read(I2C_ADDR,REG_CTRL_REG1,byte(1),&statusCheck);
     I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(statusCheck & ~activeMask));
@@ -227,6 +230,9 @@ void MMA8453_n0m1::shakeMode(int threshold, boolean enableX, boolean enableY, bo
 	
 	 boolean error = false;
 	 byte statusCheck;
+	
+	 //setup i2c
+	 I2c.begin();
 	
 	 I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
 	
@@ -304,6 +310,9 @@ void MMA8453_n0m1::motionMode(int threshold, boolean enableX, boolean enableY, b
 	
 	 boolean error = false;
 	 byte statusCheck;
+	
+	 //setup i2c
+	 I2c.begin();
 	
 	 I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
 	
