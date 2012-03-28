@@ -40,7 +40,20 @@ MMA8453_n0m1::MMA8453_n0m1()
 	shakeAxisX_ = false;
 	shakeAxisY_ = false;
 	shakeAxisZ_ = false;
+	I2CAddr = 0x1c; //The i2C address of the MMA8453 chip. 0x1D is another common value.
 
+}
+
+/***********************************************************
+ * 
+ * setI2CAddr
+ *
+ * 
+ *   
+ ***********************************************************/
+void MMA8453_n0m1::setI2CAddr(int address)
+{
+	I2CAddr = address; I2CAddr;
 }
 
 /***********************************************************
@@ -78,7 +91,7 @@ void MMA8453_n0m1::clearInterrupt()
   {	
 	
 	 byte sourceSystem;
-	 I2c.read(I2C_ADDR,REG_INT_SOURCE,byte(1),&sourceSystem); //check which system fired the interrupt
+	 I2c.read(I2CAddr,REG_INT_SOURCE,byte(1),&sourceSystem); //check which system fired the interrupt
      	
 	if((sourceSystem&0x20) == 0x20) //Transient
 	{	
@@ -86,7 +99,7 @@ void MMA8453_n0m1::clearInterrupt()
 	      //Read the Transient to clear system interrupt and Transient
 	      byte srcTrans;
 		  shake_ = true;
-	      I2c.read(I2C_ADDR,REG_TRANSIENT_SRC ,byte(1),&srcTrans);
+	      I2c.read(I2CAddr,REG_TRANSIENT_SRC ,byte(1),&srcTrans);
 		
 		  if(srcTrans&0x02 == 0x02)
 		  {
@@ -106,7 +119,7 @@ void MMA8453_n0m1::clearInterrupt()
 	if((sourceSystem&0x04) == 0x04) //FreeFall Motion
 	{
 	      byte srcFF;
-	      I2c.read(I2C_ADDR,REG_FF_MT_SRC ,byte(1),&srcFF);
+	      I2c.read(I2CAddr,REG_FF_MT_SRC ,byte(1),&srcFF);
 		  motion_ = true;
 	
 	}
@@ -140,14 +153,14 @@ void MMA8453_n0m1::xyz(int& x, int& y, int& z)
 
   if (highRes_) 
   {
-    I2c.read(I2C_ADDR, REG_OUT_X_MSB, 6, buf);
+    I2c.read(I2CAddr, REG_OUT_X_MSB, 6, buf);
     x = buf[0] << 2 | buf[1] >> 6 & 0x3;
     y = buf[2] << 2 | buf[3] >> 6 & 0x3;
     z = buf[4] << 2 | buf[5] >> 6 & 0x3;
   }
   else 
   {
-    I2c.read(I2C_ADDR, REG_OUT_X_MSB, 3, buf);
+    I2c.read(I2CAddr, REG_OUT_X_MSB, 3, buf);
     x = buf[0] << 2;
     y = buf[1] << 2;
     z = buf[2] << 2;
@@ -178,27 +191,27 @@ void MMA8453_n0m1::dataMode(boolean highRes, int gScaleRange)
 	I2c.begin();
 	
 	//register settings must be made in standby mode
-	I2c.read(I2C_ADDR,REG_CTRL_REG1,byte(1),&statusCheck);
-    I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(statusCheck & ~activeMask));
+	I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);
+    I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck & ~activeMask));
 	
 	if( gScaleRange <= 3){ gScaleRange = FULL_SCALE_RANGE_2g; } //0-3 = 2g
 	else if( gScaleRange <= 5){ gScaleRange = FULL_SCALE_RANGE_4g; } //4-5 = 4g
 	else if( gScaleRange <= 8){ gScaleRange = FULL_SCALE_RANGE_8g; }// 6-8 = 8g
 	else if( gScaleRange > 8) { gScaleRange = FULL_SCALE_RANGE_8g; } //boundary
-	I2c.write(I2C_ADDR,REG_XYZ_DATA_CFG, byte(gScaleRange));
+	I2c.write(I2CAddr,REG_XYZ_DATA_CFG, byte(gScaleRange));
     
     //set highres 10bit or lowres 8bit
-    I2c.read(I2C_ADDR,REG_CTRL_REG1,byte(1),&statusCheck);	
+    I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);	
 	if(highRes){
-	    I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(statusCheck & ~resModeMask));
+	    I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck & ~resModeMask));
 	}
     else { 
-  		I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(statusCheck | resModeMask));	    
+  		I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck | resModeMask));	    
 	}
  
     //active Mode
- 	I2c.read(I2C_ADDR,REG_CTRL_REG1,byte(1),&statusCheck);
-    I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(statusCheck | activeMask));
+ 	I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);
+    I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck | activeMask));
 }
 
 /***********************************************************
@@ -234,41 +247,41 @@ void MMA8453_n0m1::shakeMode(int threshold, boolean enableX, boolean enableY, bo
 	 //setup i2c
 	 I2c.begin();
 	
-	 I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
+	 I2c.write(I2CAddr, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
 	
 	 byte xyzCfg = 0x10; //latch always enabled
 	 if(enableX) xyzCfg |= 0x02;
 	 if(enableY) xyzCfg |= 0x04;
 	 if(enableZ) xyzCfg |= 0x08;
 	
-	 I2c.write(I2C_ADDR, REG_TRANSIENT_CFG, xyzCfg);  //XYZ + latch 0x1E
-	 I2c.read(I2C_ADDR, REG_TRANSIENT_CFG, byte(1), &statusCheck);
+	 I2c.write(I2CAddr, REG_TRANSIENT_CFG, xyzCfg);  //XYZ + latch 0x1E
+	 I2c.read(I2CAddr, REG_TRANSIENT_CFG, byte(1), &statusCheck);
 	 if(statusCheck != xyzCfg) error = true;
 
 	
 	 if(threshold > 127) threshold = 127; //8g is the max.
-	 I2c.write(I2C_ADDR, REG_TRANSIENT_THS, byte(threshold));  //threshold 
-	 I2c.read(I2C_ADDR, REG_TRANSIENT_THS, byte(1), &statusCheck);
+	 I2c.write(I2CAddr, REG_TRANSIENT_THS, byte(threshold));  //threshold 
+	 I2c.read(I2CAddr, REG_TRANSIENT_THS, byte(1), &statusCheck);
 	 if(statusCheck != byte(threshold)) error = true;
 
 	 
-	 I2c.write(I2C_ADDR, REG_TRANSIENT_COUNT, byte(0x05)); //Set the Debounce Counter for 50 ms
-	 I2c.read(I2C_ADDR,REG_TRANSIENT_COUNT, byte(1), &statusCheck);
+	 I2c.write(I2CAddr, REG_TRANSIENT_COUNT, byte(0x05)); //Set the Debounce Counter for 50 ms
+	 I2c.read(I2CAddr,REG_TRANSIENT_COUNT, byte(1), &statusCheck);
 	 if(statusCheck != 0x05) error = true;
 
-	 I2c.read(I2C_ADDR, REG_CTRL_REG4, byte(1), &statusCheck);
+	 I2c.read(I2CAddr, REG_CTRL_REG4, byte(1), &statusCheck);
 	 statusCheck |= 0x20;
-	 I2c.write(I2C_ADDR, REG_CTRL_REG4, statusCheck);  //Enable Transient Detection Interrupt in the System
+	 I2c.write(I2CAddr, REG_CTRL_REG4, statusCheck);  //Enable Transient Detection Interrupt in the System
 	  	
 	 byte intSelect = 0x20;
 	 if(enableINT2) intSelect = 0x00;
-	 I2c.read(I2C_ADDR, REG_CTRL_REG5, byte(1), &statusCheck);
+	 I2c.read(I2CAddr, REG_CTRL_REG5, byte(1), &statusCheck);
 	 statusCheck |= intSelect;
-	 I2c.write(I2C_ADDR, REG_CTRL_REG5, statusCheck); //INT2 0x0, INT1 0x20 
+	 I2c.write(I2CAddr, REG_CTRL_REG5, statusCheck); //INT2 0x0, INT1 0x20 
 
-	 I2c.read(I2C_ADDR, REG_CTRL_REG1, byte(1), &statusCheck); //Read out the contents of the register
+	 I2c.read(I2CAddr, REG_CTRL_REG1, byte(1), &statusCheck); //Read out the contents of the register
 	 statusCheck |= 0x01; //Change the value in the register to Active Mode.
-	 I2c.write(I2C_ADDR, REG_CTRL_REG1, statusCheck); //Write in the updated value to put the device in Active Mode
+	 I2c.write(I2CAddr, REG_CTRL_REG1, statusCheck); //Write in the updated value to put the device in Active Mode
 	
 	if(error)
 	{
@@ -314,7 +327,7 @@ void MMA8453_n0m1::motionMode(int threshold, boolean enableX, boolean enableY, b
 	 //setup i2c
 	 I2c.begin();
 	
-	 I2c.write(I2C_ADDR, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
+	 I2c.write(I2CAddr, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
 	
 	 byte xyzCfg = 0x80; //latch always enabled
 	 xyzCfg |= 0x40; //Motion not free fall
@@ -322,32 +335,32 @@ void MMA8453_n0m1::motionMode(int threshold, boolean enableX, boolean enableY, b
 	 if(enableY) xyzCfg |= 0x10;
 	 if(enableZ) xyzCfg |= 0x20;
 	
-	 I2c.write(I2C_ADDR, REG_FF_MT_CFG, xyzCfg);  //XYZ + latch + motion
-	 I2c.read(I2C_ADDR, REG_FF_MT_CFG, byte(1), &statusCheck);
+	 I2c.write(I2CAddr, REG_FF_MT_CFG, xyzCfg);  //XYZ + latch + motion
+	 I2c.read(I2CAddr, REG_FF_MT_CFG, byte(1), &statusCheck);
 	 if(statusCheck != xyzCfg) error = true;
 
 	 if(threshold > 127) threshold = 127; //a range of 0-127.
-	 I2c.write(I2C_ADDR, REG_FF_MT_THS, byte(threshold));  //threshold 
-	 I2c.read(I2C_ADDR, REG_FF_MT_THS, byte(1), &statusCheck);
+	 I2c.write(I2CAddr, REG_FF_MT_THS, byte(threshold));  //threshold 
+	 I2c.read(I2CAddr, REG_FF_MT_THS, byte(1), &statusCheck);
 	 if(statusCheck != byte(threshold)) error = true;
 
-	 I2c.write(I2C_ADDR, REG_FF_MT_COUNT, byte(0x0A)); //Set the Debounce Counter for 100 ms
-	 I2c.read(I2C_ADDR,REG_FF_MT_COUNT, byte(1), &statusCheck);
+	 I2c.write(I2CAddr, REG_FF_MT_COUNT, byte(0x0A)); //Set the Debounce Counter for 100 ms
+	 I2c.read(I2CAddr,REG_FF_MT_COUNT, byte(1), &statusCheck);
 	 if(statusCheck != 0x0A) error = true;
 
-	 I2c.read(I2C_ADDR, REG_CTRL_REG4, byte(1), &statusCheck);
+	 I2c.read(I2CAddr, REG_CTRL_REG4, byte(1), &statusCheck);
 	 statusCheck |= 0x04;
-	 I2c.write(I2C_ADDR, REG_CTRL_REG4, statusCheck); //Enable Motion Interrupt in the System
+	 I2c.write(I2CAddr, REG_CTRL_REG4, statusCheck); //Enable Motion Interrupt in the System
 
 	 byte intSelect = 0x04;
 	 if(enableINT2) intSelect = 0x00;
-	 I2c.read(I2C_ADDR, REG_CTRL_REG5, byte(1), &statusCheck);
+	 I2c.read(I2CAddr, REG_CTRL_REG5, byte(1), &statusCheck);
 	 statusCheck |= intSelect;
-	 I2c.write(I2C_ADDR, REG_CTRL_REG5, statusCheck); //INT2 0x0, INT1 0x04
+	 I2c.write(I2CAddr, REG_CTRL_REG5, statusCheck); //INT2 0x0, INT1 0x04
 	 
-	 I2c.read(I2C_ADDR, REG_CTRL_REG1, byte(1), &statusCheck); //Read out the contents of the register
+	 I2c.read(I2CAddr, REG_CTRL_REG1, byte(1), &statusCheck); //Read out the contents of the register
 	 statusCheck |= 0x01; //Change the value in the register to Active Mode.
-	 I2c.write(I2C_ADDR, REG_CTRL_REG1, statusCheck); //Write in the updated value to put the device in Active Mode
+	 I2c.write(I2CAddr, REG_CTRL_REG1, statusCheck); //Write in the updated value to put the device in Active Mode
 	
 	if(error)
 	{
@@ -369,7 +382,7 @@ void MMA8453_n0m1::motionMode(int threshold, boolean enableX, boolean enableY, b
  ***********************************************************/
 void MMA8453_n0m1::regRead(byte reg, byte *buf, byte count)
 {
-   I2c.read(I2C_ADDR, reg, count, buf);
+   I2c.read(I2CAddr, reg, count, buf);
 }
  
 /***********************************************************
@@ -381,7 +394,7 @@ void MMA8453_n0m1::regRead(byte reg, byte *buf, byte count)
  ***********************************************************/
 void MMA8453_n0m1::regWrite(byte reg, byte val)
 {
-  I2c.write(I2C_ADDR, reg, val);
+  I2c.write(I2CAddr, reg, val);
 }
 
 /***********************************************************

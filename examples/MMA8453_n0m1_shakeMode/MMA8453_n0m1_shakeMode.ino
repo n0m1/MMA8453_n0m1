@@ -16,7 +16,7 @@ MMA8453_n0m1 accel;
 void setup()
 {
   Serial.begin(9600);
-
+  accel.setI2CAddr(0x1D); //change your device address if necessary, default is 0x1C
   /*
   threshold [0-127] formula: 6g/ 0.063g = 95.2 counts, round to 96 counts ,
    enable X, 
@@ -25,6 +25,7 @@ void setup()
    enable MMA8453Q INT pin 2 (false= pin 1), 
    arduino INT pin number
    */
+  
   accel.shakeMode(32,true,true,true,false,2);
   Serial.println("MMA8453_n0m1 library");
   Serial.println("Shake Example");

@@ -16,7 +16,7 @@ MMA8453_n0m1 accel;
 void setup()
 {
   Serial.begin(9600);
- 
+  accel.setI2CAddr(0x1D); //change your device address if necessary, default is 0x1C
   /*
   threshold [0-127] formula: 0.5g/ 0.063g = 7.9 counts, round to 8 counts ,
   enable X, 

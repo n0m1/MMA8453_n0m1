@@ -95,7 +95,6 @@ const byte FULL_SCALE_RANGE_2g = 0x0;
 const byte FULL_SCALE_RANGE_4g = 0x1;
 const byte FULL_SCALE_RANGE_8g = 0x2;
 
-const byte I2C_ADDR = 0x1c; //SA0=0
 
 
 extern "C" void accelISR(void) __attribute__ ((signal)); 
@@ -107,6 +106,15 @@ public:
   friend void accelISR(void); //make friend so bttnPressISR can access private var keyhit	
  
   MMA8453_n0m1();
+
+/***********************************************************
+ * 
+ * setI2CAddr
+ *
+ * set the i2c address of the MMA8453 to a new value, such as 0x1D
+ *   
+ ***********************************************************/
+void setI2CAddr(int address);
 
 
 /***********************************************************
@@ -240,6 +248,8 @@ private:
 	void clearInterrupt();
 	
 	int x_,y_,z_;
+	
+	byte I2CAddr; 
 	
 	boolean highRes_;
 	boolean dataMode_;

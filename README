@@ -17,6 +17,10 @@ Dependencies:
 			
 List of Functions:
 
+Function: setI2CAddr
+Description: set the i2c device address to a new value, default is 0x1C
+Parameters: (int) device address: a common value is 0x1D
+------------------------------------------------------	
 Function: dataMode
 Description: set the device to return raw data values
 Parameters: (boolean) enable highRes 10bit,
