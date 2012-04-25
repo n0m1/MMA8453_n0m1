@@ -116,7 +116,6 @@ public:
  ***********************************************************/
 void setI2CAddr(int address);
 
-
 /***********************************************************
  * 
  * dataMode
@@ -242,6 +241,17 @@ boolean motion() { boolean motionOut = motion_; motion_ = false; return motionOu
   void regWrite(byte reg, byte val);
 
 
+//-----------------------------------------------------------
+// Compatiblity functions to match the api of the ADXL345 library
+// http://code.google.com/p/adxl345driver/
+// allows for more easy updates of code from the ADXL345 to the MMA8453
+//-----------------------------------------------------------
+void setRangeSetting(int gScaleRange) { gScaleRange_ = gScaleRange; } //call this before setFullResBit()
+void setFullResBit(boolean highRes) { dataMode(highRes,gScaleRange_); }
+void readAccel(int *x, int *y, int *z) { xyz(*x,*y,*z); }
+
+
+
 private:
 	
 	void xyz(int& x,int& y, int& z);
@@ -252,6 +262,7 @@ private:
 	byte I2CAddr; 
 	
 	boolean highRes_;
+	int gScaleRange_;
 	boolean dataMode_;
 	boolean shakeMode_;
 	boolean motionMode_;

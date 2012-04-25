@@ -26,7 +26,7 @@ void setup()
 void loop()
 {
   accel.update();
-
+  
   Serial.print("x: ");
   Serial.print(accel.x());
   Serial.print(" y: ");

@@ -41,6 +41,7 @@ MMA8453_n0m1::MMA8453_n0m1()
 	shakeAxisY_ = false;
 	shakeAxisZ_ = false;
 	I2CAddr = 0x1c; //The i2C address of the MMA8453 chip. 0x1D is another common value.
+	gScaleRange_ = 2;  //default 2g
 
 }
 
@@ -53,7 +54,7 @@ MMA8453_n0m1::MMA8453_n0m1()
  ***********************************************************/
 void MMA8453_n0m1::setI2CAddr(int address)
 {
-	I2CAddr = address; I2CAddr;
+	I2CAddr = address; I2CAddr; 
 }
 
 /***********************************************************
@@ -182,6 +183,7 @@ void MMA8453_n0m1::xyz(int& x, int& y, int& z)
 void MMA8453_n0m1::dataMode(boolean highRes, int gScaleRange)
 {
 	highRes_ = highRes;
+	gScaleRange_ = gScaleRange;
 	dataMode_ = true;
 	byte statusCheck;
 	byte activeMask = 0x01;
@@ -194,11 +196,11 @@ void MMA8453_n0m1::dataMode(boolean highRes, int gScaleRange)
 	I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);
     I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck & ~activeMask));
 	
-	if( gScaleRange <= 3){ gScaleRange = FULL_SCALE_RANGE_2g; } //0-3 = 2g
-	else if( gScaleRange <= 5){ gScaleRange = FULL_SCALE_RANGE_4g; } //4-5 = 4g
-	else if( gScaleRange <= 8){ gScaleRange = FULL_SCALE_RANGE_8g; }// 6-8 = 8g
-	else if( gScaleRange > 8) { gScaleRange = FULL_SCALE_RANGE_8g; } //boundary
-	I2c.write(I2CAddr,REG_XYZ_DATA_CFG, byte(gScaleRange));
+	if( gScaleRange_ <= 3){ gScaleRange_ = FULL_SCALE_RANGE_2g; } //0-3 = 2g
+	else if( gScaleRange_ <= 5){ gScaleRange_ = FULL_SCALE_RANGE_4g; } //4-5 = 4g
+	else if( gScaleRange_ <= 8){ gScaleRange_ = FULL_SCALE_RANGE_8g; }// 6-8 = 8g
+	else if( gScaleRange_ > 8) { gScaleRange_ = FULL_SCALE_RANGE_8g; } //boundary
+	I2c.write(I2CAddr,REG_XYZ_DATA_CFG, byte(gScaleRange_));
     
     //set highres 10bit or lowres 8bit
     I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);	
