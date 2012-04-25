@@ -76,3 +76,18 @@ Description: read one of the accelerometer registers
 ------------------------------------------------------ 
 Function: regWrite
 Description: set one of the accelerometer registers
+------------------------------------------------------
+Function: setRangeSetting
+Parameters: (int) gScaleRange set g force range: [2g,4g,8g]
+Description: Compatibilty Function
+------------------------------------------------------
+Function: setFullResBit
+Parameters: (boolean) highRes enable highRes 10bit
+Description: Compatibilty Function
+------------------------------------------------------
+Function: readAccel
+Parameters: (int) *x pass x pointer
+	    (int) *y pass y pointer
+	    (int) *z pass z pointer
+Description: Compatibilty Function
+
