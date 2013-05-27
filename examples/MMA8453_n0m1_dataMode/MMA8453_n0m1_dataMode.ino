@@ -1,14 +1,15 @@
 /************************************************************************************
  * 	
  * 	Name    : MMA8453_n0m1 Library Example: DataMode                       
- * 	Author  : Noah Shibley, Michael Grant, NoMi Design Ltd. http://n0m1.com                       
- * 	Date    : Feb 10th 2012                                    
- * 	Version : 0.1                                              
- * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via i2c. 
+ * 	Author  : Noah Shibley, NoMi Design Ltd. http://n0m1.com                       
+ *		    : Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/
+ * 	Date    : May 5th 2013                                    
+ * 	Version : 0.2                                              
+ * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via Arduino native WIRE with repeated start (was i2c of DSS circuits). 
  *
  ***********************************************************************************/
 
-#include <I2C.h>
+#include <Wire.h>
 #include <MMA8453_n0m1.h>
 
 MMA8453_n0m1 accel;
@@ -20,7 +21,7 @@ void setup()
   accel.dataMode(true, 2); //enable highRes 10bit, 2g range [2g,4g,8g]
   Serial.println("MMA8453_n0m1 library");
   Serial.println("XYZ Data Example");
-  Serial.println("n0m1.com");
+  Serial.println("n0m1.com & krazatchu.ca");
 }
 
 void loop()

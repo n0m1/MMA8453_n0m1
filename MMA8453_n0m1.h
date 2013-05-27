@@ -1,10 +1,11 @@
 /************************************************************************************
  * 	
  * 	Name    : MMA8453_n0m1 Library                         
- * 	Author  : Noah Shibley, Michael Grant, NoMi Design Ltd. http://n0m1.com                       
- * 	Date    : Feb 10th 2012                                    
- * 	Version : 0.1                                              
- * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via i2c. 
+ * 	Author  : Noah Shibley, NoMi Design Ltd. http://socialhardware.net       
+ *			: Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/
+ * 	Date    : May 5th 2013                  
+ * 	Version : 0.2                                              
+ * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via native WIRE with repeated start (was i2c of DSS circuits). 
               Some of the lib source from Kerry D. Wong
 			  http://www.kerrywong.com/2012/01/09/interfacing-mma8453q-with-arduino/
  * 
@@ -46,7 +47,7 @@
 	#include <PinChangeIntConfig.h>
 #endif
 
-#include <I2C.h>
+#include <Wire.h>
 
 const byte REG_STATUS = 0x00; //(R) Real time status
 const byte REG_OUT_X_MSB = 0x01; //(R) [7:0] are 8 MSBs of 10-bit sample

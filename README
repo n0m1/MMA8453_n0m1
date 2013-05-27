@@ -1,7 +1,8 @@
 Name    : MMA8453_n0m1 Library                         
-Author  : Noah Shibley, Michael Grant, NoMi Design Ltd. http://n0m1.com                       
-Date    : Feb 10th 2012                                    
-Version : 0.1                                              
+Author  : Noah Shibley, NoMi Design Ltd. http://socialhardware.net       
+		: Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/                  
+Date    : May 5th 2013                                 
+Version : 0.2                                               
 Notes   : Arduino Library for use with the Freescale MMA8453Q via i2c. 
           Some of the lib source from Kerry D. Wong
 	  http://www.kerrywong.com/2012/01/09/interfacing-mma8453q-with-arduino/
@@ -10,9 +11,7 @@ Notes   : Arduino Library for use with the Freescale MMA8453Q via i2c.
 	  Refer to the examples for how to use this library.  
 			
 Dependencies:	
-	 I2C library:
-	 http://dsscircuits.com/articles/arduino-i2c-master-library.html
-	
+	none
 	
 			
 List of Functions:

@@ -1,10 +1,11 @@
 /************************************************************************************
  * 	
  * 	Name    : MMA8453_n0m1 Library Example: ShakeMode PinChange INT                         
- * 	Author  : Noah Shibley, Michael Grant, NoMi Design Ltd. http://n0m1.com                       
- * 	Date    : Feb 10th 2012                                    
- * 	Version : 0.1                                              
- * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via i2c. 
+ * 	Author  : Noah Shibley, NoMi Design Ltd. http://n0m1.com                       
+ *		    : Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/
+ * 	Date    : May 5th 2013                                    
+ * 	Version : 0.2                                                                         
+ * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via Arduino native WIRE with repeated start (was i2c of DSS circuits). 
  *   Instruction:
  *                uncomment #define PINCHANGE_INT in MMA8453_n0m1.h to use INT pins other 
  *                then arduino pins 2 & 3 include the library 
@@ -13,7 +14,7 @@
 
 #include <PinChangeInt.h>
 #include <PinChangeIntConfig.h>
-#include <I2C.h>
+#include <Wire.h>
 #include <MMA8453_n0m1.h>
 
 MMA8453_n0m1 accel;
@@ -33,7 +34,7 @@ void setup()
   accel.shakeMode(32,true,true,true,false,4);
   Serial.println("MMA8453_n0m1 library");
   Serial.println("PinChange INT Shake Example");
-  Serial.println("n0m1.com");
+  Serial.println("n0m1.com & krazatchu.ca");
 }
 
 void loop()

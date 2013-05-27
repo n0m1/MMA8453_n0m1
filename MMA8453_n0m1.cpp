@@ -1,10 +1,11 @@
 /************************************************************************************
  * 	
  * 	Name    : MMA8453_n0m1 Library                         
- * 	Author  : Noah Shibley, Michael Grant, NoMi Design Ltd. http://n0m1.com                       
- * 	Date    : Feb 10th 2012                                    
- * 	Version : 0.1                                              
- * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via i2c. 
+ * 	Author  : Noah Shibley, NoMi Design Ltd. http://socialhardware.net      
+ *			: Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/
+ * 	Date    : May 5th 2013                                    
+ * 	Version : 0.2                                              
+ * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via native WIRE with repeated start (was i2c of DSS circuits). 
               Some of the lib source from Kerry D. Wong
 			  http://www.kerrywong.com/2012/01/09/interfacing-mma8453q-with-arduino/
  * 
@@ -92,7 +93,16 @@ void MMA8453_n0m1::clearInterrupt()
   {	
 	
 	 byte sourceSystem;
-	 I2c.read(I2CAddr,REG_INT_SOURCE,byte(1),&sourceSystem); //check which system fired the interrupt
+	 // I2c.read(I2CAddr,REG_INT_SOURCE,byte(1),&sourceSystem); //check which system fired the interrupt
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_INT_SOURCE));      // sets register pointer to echo register 
+	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		sourceSystem = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 
      	
 	if((sourceSystem&0x20) == 0x20) //Transient
 	{	
@@ -100,7 +110,16 @@ void MMA8453_n0m1::clearInterrupt()
 	      //Read the Transient to clear system interrupt and Transient
 	      byte srcTrans;
 		  shake_ = true;
-	      I2c.read(I2CAddr,REG_TRANSIENT_SRC ,byte(1),&srcTrans);
+	      // I2c.read(I2CAddr,REG_TRANSIENT_SRC ,byte(1),&srcTrans);
+		  Wire.beginTransmission(I2CAddr); // transmit to device 
+		  Wire.write(byte(REG_TRANSIENT_SRC));      // sets register pointer to echo register 
+		  Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+		  Wire.requestFrom (int(I2CAddr), 1);
+		  while(Wire.available())    // slave may send less than requested
+		  { 
+		  	 srcTrans = Wire.read(); // receive a byte as character
+		  }
+		  Wire.endTransmission(true);      // stop transmitting - hang up - 
 		
 		  if(srcTrans&0x02 == 0x02)
 		  {
@@ -120,7 +139,16 @@ void MMA8453_n0m1::clearInterrupt()
 	if((sourceSystem&0x04) == 0x04) //FreeFall Motion
 	{
 	      byte srcFF;
-	      I2c.read(I2CAddr,REG_FF_MT_SRC ,byte(1),&srcFF);
+	      // I2c.read(I2CAddr,REG_FF_MT_SRC ,byte(1),&srcFF);
+		  Wire.beginTransmission(I2CAddr); // transmit to device 
+		  Wire.write(byte(REG_FF_MT_SRC));      // sets register pointer to echo register 
+		  Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+		  Wire.requestFrom (int(I2CAddr), 1);
+		  while(Wire.available())    // slave may send less than requested
+		  { 
+		  	 srcFF = Wire.read(); // receive a byte as character
+		  }
+		  Wire.endTransmission(true);      // stop transmitting - hang up - 
 		  motion_ = true;
 	
 	}
@@ -154,15 +182,42 @@ void MMA8453_n0m1::xyz(int& x, int& y, int& z)
 
   if (highRes_) 
   {
-    I2c.read(I2CAddr, REG_OUT_X_MSB, 6, buf);
+    // I2c.read(I2CAddr, REG_OUT_X_MSB, 6, buf);
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+	Wire.write(byte(REG_OUT_X_MSB));      // sets register pointer to echo register 
+    Wire.endTransmission(false);      // stop transmitting but don't hang up - repeated start
+    Wire.requestFrom (int(I2CAddr), 6);
+    if(6 <= Wire.available())    // if 6 bytes were received
+    { 
+	   buf[0] = Wire.read(); 
+	   buf[1] = Wire.read(); 
+	   buf[2] = Wire.read(); 
+	   buf[3] = Wire.read(); 
+	   buf[4] = Wire.read(); 
+	   buf[5] = Wire.read(); 
+    }
+	Wire.endTransmission(true);      // stop transmitting - hang up - 
+		  
     x = buf[0] << 2 | buf[1] >> 6 & 0x3;
     y = buf[2] << 2 | buf[3] >> 6 & 0x3;
     z = buf[4] << 2 | buf[5] >> 6 & 0x3;
   }
   else 
   {
-    I2c.read(I2CAddr, REG_OUT_X_MSB, 3, buf);
-    x = buf[0] << 2;
+    // I2c.read(I2CAddr, REG_OUT_X_MSB, 3, buf);
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+	Wire.write(byte(REG_OUT_X_MSB));      // sets register pointer to echo register 
+    Wire.endTransmission(false);      // stop transmitting but don't hang up - repeated start
+    Wire.requestFrom (int(I2CAddr), 3);
+    if(3 <= Wire.available())    // if 3 bytes were received
+    { 
+	   buf[0] = Wire.read(); 
+	   buf[1] = Wire.read(); 
+	   buf[2] = Wire.read(); 
+    }
+	Wire.endTransmission(true);      // stop transmitting - hang up - 
+   
+	x = buf[0] << 2;
     y = buf[1] << 2;
     z = buf[2] << 2;
   }
@@ -190,30 +245,84 @@ void MMA8453_n0m1::dataMode(boolean highRes, int gScaleRange)
 	byte resModeMask = 0x02;
 	
 	//setup i2c
-	I2c.begin();
+	Wire.begin();
 	
 	//register settings must be made in standby mode
-	I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);
-    I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck & ~activeMask));
+	// I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+	Wire.write(byte(REG_CTRL_REG1));      // sets register pointer to echo register 
+	Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	Wire.requestFrom (int(I2CAddr), 1);
+	while(Wire.available())    // slave may send less than requested
+	{ 
+		statusCheck = Wire.read(); // receive a byte as character
+	}
+	Wire.endTransmission(true);      // stop transmitting - hang up - 
+	
+    // I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck & ~activeMask));
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+    Wire.write(byte(REG_CTRL_REG1));      // sets register pointer
+	Wire.write(byte((statusCheck & ~activeMask)));   
+	Wire.endTransmission(true);      // stop transmitting & hang up
 	
 	if( gScaleRange_ <= 3){ gScaleRange_ = FULL_SCALE_RANGE_2g; } //0-3 = 2g
 	else if( gScaleRange_ <= 5){ gScaleRange_ = FULL_SCALE_RANGE_4g; } //4-5 = 4g
 	else if( gScaleRange_ <= 8){ gScaleRange_ = FULL_SCALE_RANGE_8g; }// 6-8 = 8g
 	else if( gScaleRange_ > 8) { gScaleRange_ = FULL_SCALE_RANGE_8g; } //boundary
-	I2c.write(I2CAddr,REG_XYZ_DATA_CFG, byte(gScaleRange_));
+	
+	// I2c.write(I2CAddr,REG_XYZ_DATA_CFG, byte(gScaleRange_));
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+    Wire.write(byte(REG_XYZ_DATA_CFG));      // sets register pointer
+	Wire.write(byte(gScaleRange_));   
+	Wire.endTransmission(true);      // stop transmitting & hang up
+	
     
     //set highres 10bit or lowres 8bit
-    I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);	
+    // I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);	
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+	Wire.write(byte(REG_CTRL_REG1));      // sets register pointer to echo register 
+	Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	Wire.requestFrom (int(I2CAddr), 1);
+	while(Wire.available())    // slave may send less than requested
+	{ 
+		statusCheck = Wire.read(); // receive a byte as character
+	}
+	Wire.endTransmission(true);      // stop transmitting - hang up - 
+	
+	
 	if(highRes){
-	    I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck & ~resModeMask));
+	    // I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck & ~resModeMask));
+		Wire.beginTransmission(I2CAddr); // transmit to device 
+		Wire.write(byte(REG_CTRL_REG1));      // sets register pointer
+		Wire.write(byte(statusCheck & ~resModeMask));   
+		Wire.endTransmission(true);      // stop transmitting & hang up
 	}
     else { 
-  		I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck | resModeMask));	    
+  		// I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck | resModeMask));	    
+		Wire.beginTransmission(I2CAddr); // transmit to device 
+		Wire.write(byte(REG_CTRL_REG1));      // sets register pointer
+		Wire.write(byte(statusCheck | resModeMask));   
+		Wire.endTransmission(true);      // stop transmitting & hang up
 	}
  
     //active Mode
- 	I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);
-    I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck | activeMask));
+ 	// I2c.read(I2CAddr,REG_CTRL_REG1,byte(1),&statusCheck);
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+	Wire.write(byte(REG_CTRL_REG1));      // sets register pointer to echo register 
+	Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	Wire.requestFrom (int(I2CAddr), 1);
+	while(Wire.available())    // slave may send less than requested
+	{ 
+		statusCheck = Wire.read(); // receive a byte as character
+	}
+	Wire.endTransmission(true);      // stop transmitting - hang up - 	
+	
+    // I2c.write(I2CAddr, REG_CTRL_REG1, byte(statusCheck | activeMask));
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+	Wire.write(byte(REG_CTRL_REG1));      // sets register pointer
+	Wire.write(byte(statusCheck | activeMask));   
+	Wire.endTransmission(true);      // stop transmitting & hang up	
+	
 }
 
 /***********************************************************
@@ -247,43 +356,132 @@ void MMA8453_n0m1::shakeMode(int threshold, boolean enableX, boolean enableY, bo
 	 byte statusCheck;
 	
 	 //setup i2c
-	 I2c.begin();
+	 Wire.begin();
 	
-	 I2c.write(I2CAddr, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
+	 // I2c.write(I2CAddr, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG1));      // sets register pointer
+	 Wire.write(byte(0x18));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up	
 	
 	 byte xyzCfg = 0x10; //latch always enabled
 	 if(enableX) xyzCfg |= 0x02;
 	 if(enableY) xyzCfg |= 0x04;
 	 if(enableZ) xyzCfg |= 0x08;
 	
-	 I2c.write(I2CAddr, REG_TRANSIENT_CFG, xyzCfg);  //XYZ + latch 0x1E
-	 I2c.read(I2CAddr, REG_TRANSIENT_CFG, byte(1), &statusCheck);
+	 // I2c.write(I2CAddr, REG_TRANSIENT_CFG, xyzCfg);  //XYZ + latch 0x1E
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_TRANSIENT_CFG));      // sets register pointer
+	 Wire.write(byte(xyzCfg));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		 
+	 
+	 // I2c.read(I2CAddr, REG_TRANSIENT_CFG, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_TRANSIENT_CFG));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 		 
+	 	 
 	 if(statusCheck != xyzCfg) error = true;
 
 	
 	 if(threshold > 127) threshold = 127; //8g is the max.
-	 I2c.write(I2CAddr, REG_TRANSIENT_THS, byte(threshold));  //threshold 
-	 I2c.read(I2CAddr, REG_TRANSIENT_THS, byte(1), &statusCheck);
+	 // I2c.write(I2CAddr, REG_TRANSIENT_THS, byte(threshold));  //threshold 
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_TRANSIENT_THS));      // sets register pointer
+	 Wire.write(byte(threshold));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up	
+	 	 
+	 // I2c.read(I2CAddr, REG_TRANSIENT_THS, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_TRANSIENT_THS));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 		 
 	 if(statusCheck != byte(threshold)) error = true;
 
 	 
-	 I2c.write(I2CAddr, REG_TRANSIENT_COUNT, byte(0x05)); //Set the Debounce Counter for 50 ms
-	 I2c.read(I2CAddr,REG_TRANSIENT_COUNT, byte(1), &statusCheck);
+	 // I2c.write(I2CAddr, REG_TRANSIENT_COUNT, byte(0x05)); //Set the Debounce Counter for 50 ms
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_TRANSIENT_COUNT));      // sets register pointer
+	 Wire.write(byte(0x05));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		 
+	 
+	 // I2c.read(I2CAddr,REG_TRANSIENT_COUNT, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_TRANSIENT_COUNT));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 		 
 	 if(statusCheck != 0x05) error = true;
 
-	 I2c.read(I2CAddr, REG_CTRL_REG4, byte(1), &statusCheck);
+	 // I2c.read(I2CAddr, REG_CTRL_REG4, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG4));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 	
+	 
 	 statusCheck |= 0x20;
-	 I2c.write(I2CAddr, REG_CTRL_REG4, statusCheck);  //Enable Transient Detection Interrupt in the System
+	 // I2c.write(I2CAddr, REG_CTRL_REG4, statusCheck);  //Enable Transient Detection Interrupt in the System
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG4));      // sets register pointer
+	 Wire.write(byte(statusCheck));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
 	  	
 	 byte intSelect = 0x20;
 	 if(enableINT2) intSelect = 0x00;
-	 I2c.read(I2CAddr, REG_CTRL_REG5, byte(1), &statusCheck);
+	 // I2c.read(I2CAddr, REG_CTRL_REG5, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG5));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 	
+	 
 	 statusCheck |= intSelect;
-	 I2c.write(I2CAddr, REG_CTRL_REG5, statusCheck); //INT2 0x0, INT1 0x20 
+	 // I2c.write(I2CAddr, REG_CTRL_REG5, statusCheck); //INT2 0x0, INT1 0x20 
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG5));      // sets register pointer
+	 Wire.write(byte(statusCheck));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
 
-	 I2c.read(I2CAddr, REG_CTRL_REG1, byte(1), &statusCheck); //Read out the contents of the register
+	 // I2c.read(I2CAddr, REG_CTRL_REG1, byte(1), &statusCheck); //Read out the contents of the register
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG1));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 	
+	 
 	 statusCheck |= 0x01; //Change the value in the register to Active Mode.
-	 I2c.write(I2CAddr, REG_CTRL_REG1, statusCheck); //Write in the updated value to put the device in Active Mode
+	 // I2c.write(I2CAddr, REG_CTRL_REG1, statusCheck); //Write in the updated value to put the device in Active Mode
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG1));      // sets register pointer
+	 Wire.write(byte(statusCheck));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
 	
 	if(error)
 	{
@@ -327,9 +525,13 @@ void MMA8453_n0m1::motionMode(int threshold, boolean enableX, boolean enableY, b
 	 byte statusCheck;
 	
 	 //setup i2c
-	 I2c.begin();
+	 Wire.begin();
 	
-	 I2c.write(I2CAddr, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
+	 // I2c.write(I2CAddr, REG_CTRL_REG1, byte(0x18)); //Set device in 100 Hz ODR, Standby
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG1));      // sets register pointer
+	 Wire.write(byte(0x18));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
 	
 	 byte xyzCfg = 0x80; //latch always enabled
 	 xyzCfg |= 0x40; //Motion not free fall
@@ -337,32 +539,118 @@ void MMA8453_n0m1::motionMode(int threshold, boolean enableX, boolean enableY, b
 	 if(enableY) xyzCfg |= 0x10;
 	 if(enableZ) xyzCfg |= 0x20;
 	
-	 I2c.write(I2CAddr, REG_FF_MT_CFG, xyzCfg);  //XYZ + latch + motion
-	 I2c.read(I2CAddr, REG_FF_MT_CFG, byte(1), &statusCheck);
+	 // I2c.write(I2CAddr, REG_FF_MT_CFG, xyzCfg);  //XYZ + latch + motion
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_FF_MT_CFG));      // sets register pointer
+	 Wire.write(byte(xyzCfg));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
+	 
+	 // I2c.read(I2CAddr, REG_FF_MT_CFG, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_FF_MT_CFG));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 	
 	 if(statusCheck != xyzCfg) error = true;
 
 	 if(threshold > 127) threshold = 127; //a range of 0-127.
-	 I2c.write(I2CAddr, REG_FF_MT_THS, byte(threshold));  //threshold 
-	 I2c.read(I2CAddr, REG_FF_MT_THS, byte(1), &statusCheck);
+	 // I2c.write(I2CAddr, REG_FF_MT_THS, byte(threshold));  //threshold 
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_FF_MT_THS));      // sets register pointer
+	 Wire.write(byte(threshold));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
+	 
+	 // I2c.read(I2CAddr, REG_FF_MT_THS, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_FF_MT_THS));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 	
+	 
 	 if(statusCheck != byte(threshold)) error = true;
 
-	 I2c.write(I2CAddr, REG_FF_MT_COUNT, byte(0x0A)); //Set the Debounce Counter for 100 ms
-	 I2c.read(I2CAddr,REG_FF_MT_COUNT, byte(1), &statusCheck);
+	 // I2c.write(I2CAddr, REG_FF_MT_COUNT, byte(0x0A)); //Set the Debounce Counter for 100 ms
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_FF_MT_COUNT));      // sets register pointer
+	 Wire.write(byte(0x0A));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
+	 
+	 // I2c.read(I2CAddr,REG_FF_MT_COUNT, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_FF_MT_COUNT));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 	
+	 
 	 if(statusCheck != 0x0A) error = true;
 
-	 I2c.read(I2CAddr, REG_CTRL_REG4, byte(1), &statusCheck);
+	 // I2c.read(I2CAddr, REG_CTRL_REG4, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG4));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);      // stop transmitting - hang up - 	
+	 
 	 statusCheck |= 0x04;
-	 I2c.write(I2CAddr, REG_CTRL_REG4, statusCheck); //Enable Motion Interrupt in the System
+	 // I2c.write(I2CAddr, REG_CTRL_REG4, statusCheck); //Enable Motion Interrupt in the System
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG4));      // sets register pointer
+	 Wire.write(byte(statusCheck));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
 
 	 byte intSelect = 0x04;
 	 if(enableINT2) intSelect = 0x00;
-	 I2c.read(I2CAddr, REG_CTRL_REG5, byte(1), &statusCheck);
-	 statusCheck |= intSelect;
-	 I2c.write(I2CAddr, REG_CTRL_REG5, statusCheck); //INT2 0x0, INT1 0x04
+	 // I2c.read(I2CAddr, REG_CTRL_REG5, byte(1), &statusCheck);
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG5));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);    // stop transmitting - hang up - 	
 	 
-	 I2c.read(I2CAddr, REG_CTRL_REG1, byte(1), &statusCheck); //Read out the contents of the register
+	 statusCheck |= intSelect;
+	 // I2c.write(I2CAddr, REG_CTRL_REG5, statusCheck); //INT2 0x0, INT1 0x04
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG5));      // sets register pointer
+	 Wire.write(byte(statusCheck));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up		
+	 
+	 // I2c.read(I2CAddr, REG_CTRL_REG1, byte(1), &statusCheck); //Read out the contents of the register
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG1));      // sets register pointer to echo register 
+ 	 Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	 Wire.requestFrom (int(I2CAddr), 1);
+	 while(Wire.available())    // slave may send less than requested
+	 { 
+		 statusCheck = Wire.read(); // receive a byte as character
+	 }
+	 Wire.endTransmission(true);    // stop transmitting - hang up - 	
+	 
 	 statusCheck |= 0x01; //Change the value in the register to Active Mode.
-	 I2c.write(I2CAddr, REG_CTRL_REG1, statusCheck); //Write in the updated value to put the device in Active Mode
+	 // I2c.write(I2CAddr, REG_CTRL_REG1, statusCheck); //Write in the updated value to put the device in Active Mode
+	 Wire.beginTransmission(I2CAddr); // transmit to device 
+	 Wire.write(byte(REG_CTRL_REG1));      // sets register pointer
+	 Wire.write(byte(statusCheck));   
+	 Wire.endTransmission(true);      // stop transmitting & hang up	
 	
 	if(error)
 	{
@@ -384,7 +672,19 @@ void MMA8453_n0m1::motionMode(int threshold, boolean enableX, boolean enableY, b
  ***********************************************************/
 void MMA8453_n0m1::regRead(byte reg, byte *buf, byte count)
 {
-   I2c.read(I2CAddr, reg, count, buf);
+   // I2c.read(I2CAddr, reg, count, buf);
+	Wire.beginTransmission(I2CAddr); // transmit to device 
+	Wire.write(byte(reg));      // sets register pointer to echo register 
+ 	Wire.endTransmission(false);      // stop transmitting (don't hang up - repeated start)
+	Wire.requestFrom (int(I2CAddr), int(count)); 
+    if(count <= Wire.available())    // if count bytes were received
+     { 
+	   for (int ijk = 0;  ijk >= (count-1); ijk++)
+	   {
+	   buf[ijk] = Wire.read(); 
+	   }
+     }
+	Wire.endTransmission(true);    // stop transmitting - hang up - 	
 }
  
 /***********************************************************
@@ -396,7 +696,11 @@ void MMA8453_n0m1::regRead(byte reg, byte *buf, byte count)
  ***********************************************************/
 void MMA8453_n0m1::regWrite(byte reg, byte val)
 {
-  I2c.write(I2CAddr, reg, val);
+  // I2c.write(I2CAddr, reg, val);
+  Wire.beginTransmission(I2CAddr); // transmit to device 
+  Wire.write(byte(reg));      // sets register pointer
+  Wire.write(byte(val));   
+  Wire.endTransmission(true);      // stop transmitting & hang up	
 }
 
 /***********************************************************
