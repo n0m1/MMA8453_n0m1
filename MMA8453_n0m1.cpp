@@ -3,9 +3,9 @@
  * 	Name    : MMA8453_n0m1 Library                         
  * 	Author  : Noah Shibley, NoMi Design Ltd. http://socialhardware.net      
  *			: Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/
- * 	Date    : May 5th 2013                                    
- * 	Version : 0.2                                              
- * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via native WIRE with repeated start (was i2c of DSS circuits). 
+ * 	Date    : October 10th 2013                                    
+ * 	Version : 0.3                                              
+ * 	Notes   : Arduino Library for use with the Freescale MMA8453Q and MMA8452Q via native WIRE with repeated start (was i2c of DSS circuits). 
               Some of the lib source from Kerry D. Wong
 			  http://www.kerrywong.com/2012/01/09/interfacing-mma8453q-with-arduino/
  * 
@@ -197,10 +197,16 @@ void MMA8453_n0m1::xyz(int& x, int& y, int& z)
 	   buf[5] = Wire.read(); 
     }
 	Wire.endTransmission(true);      // stop transmitting - hang up - 
-		  
-    x = buf[0] << 2 | buf[1] >> 6 & 0x3;
-    y = buf[2] << 2 | buf[3] >> 6 & 0x3;
-    z = buf[4] << 2 | buf[5] >> 6 & 0x3;
+	
+    #ifdef MMA8452
+       x = buf[0] << 4 | buf[1] >> 4 & 0xE;
+       y = buf[2] << 4 | buf[3] >> 4 & 0xE;
+       z = buf[4] << 4 | buf[5] >> 4 & 0xE;
+    #else
+       x = buf[0] << 2 | buf[1] >> 6 & 0x3;
+       y = buf[2] << 2 | buf[3] >> 6 & 0x3;
+       z = buf[4] << 2 | buf[5] >> 6 & 0x3;
+    #endif
   }
   else 
   {
@@ -217,15 +223,26 @@ void MMA8453_n0m1::xyz(int& x, int& y, int& z)
     }
 	Wire.endTransmission(true);      // stop transmitting - hang up - 
    
-	x = buf[0] << 2;
-    y = buf[1] << 2;
-    z = buf[2] << 2;
+    #ifdef MMA8452
+       x = buf[0] << 4;
+       y = buf[1] << 4;
+       z = buf[2] << 4;
+    #else
+       x = buf[0] << 2;
+       y = buf[1] << 2;
+       z = buf[2] << 2;
+    #endif
   }
-
-  if (x > 511) x = x - 1024;
-  if (y > 511) y = y - 1024 ;
-  if (z > 511) z = z - 1024;
   
+  #ifdef MMA8452
+    if (x > 2047) x = x - 4096;
+    if (y > 2047) y = y - 4096;
+    if (z > 2047) z = z - 4096;
+  #else
+    if (x > 511) x = x - 1024;
+    if (y > 511) y = y - 1024;
+    if (z > 511) z = z - 1024;
+  #endif
 }
 
 /***********************************************************
