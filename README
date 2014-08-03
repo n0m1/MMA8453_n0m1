@@ -1,14 +1,16 @@
 Name    : MMA8453_n0m1 Library                         
 Author  : Noah Shibley, NoMi Design Ltd. http://socialhardware.net       
 		: Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/                  
-Date    : May 5th 2013                                 
-Version : 0.2                                               
-Notes   : Arduino Library for use with the Freescale MMA8453Q via i2c. 
+Date    : October 10th 2013                                 
+Version : 0.3                                               
+Notes   : Arduino Library for use with the Freescale MMA8453Q and MMA8452Q via i2c. 
           Some of the lib source from Kerry D. Wong
 	  http://www.kerrywong.com/2012/01/09/interfacing-mma8453q-with-arduino/
-	  This library has been tested with the Freescale MMA8453Q Accelerometer
-	  chip, however the Freescale MMA8451, and MMA8452 probably also work.
-	  Refer to the examples for how to use this library.  
+	  This library has been tested with the Freescale MMA8453Q and MMA8452Q
+	  Accelerometer chips. MMA8451 has 14bits digital resolution and it is
+	  not implemented in this version.
+	  Refer to the examples for how to use this library.
+	  To use with MMA8452, uncomment #define MMA8452 in MMA8453_n0m1.h
 			
 Dependencies:	
 	none

@@ -3,9 +3,9 @@
  * 	Name    : MMA8453_n0m1 Library                         
  * 	Author  : Noah Shibley, NoMi Design Ltd. http://socialhardware.net       
  *			: Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/
- * 	Date    : May 5th 2013                  
- * 	Version : 0.2                                              
- * 	Notes   : Arduino Library for use with the Freescale MMA8453Q via native WIRE with repeated start (was i2c of DSS circuits). 
+ * 	Date    : October 10th 2013                  
+ * 	Version : 0.3                                              
+ * 	Notes   : Arduino Library for use with the Freescale MMA8453Q and MMA8452Q via native WIRE with repeated start (was i2c of DSS circuits). 
               Some of the lib source from Kerry D. Wong
 			  http://www.kerrywong.com/2012/01/09/interfacing-mma8453q-with-arduino/
  * 
@@ -30,6 +30,10 @@
 
 #ifndef MMA8453_N0M1_H
 #define MMA8453_N0M1_H
+
+//uncomment MMA8452 to use MMA8452 instead of MMA8453
+
+//#define MMA8452 
 
 //uncomment PINCHANGE_INT to use INT pins other then arduino pins 2 & 3
 //include the library from: http://code.google.com/p/arduino-pinchangeint/
