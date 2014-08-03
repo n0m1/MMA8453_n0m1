@@ -1,3 +1,4 @@
+```
 Name    : MMA8453_n0m1 Library                         
 Author  : Noah Shibley, NoMi Design Ltd. http://socialhardware.net       
 		: Michael Grant, Krazatchu Design Systems. http://krazatchu.ca/                  
@@ -14,10 +15,11 @@ Notes   : Arduino Library for use with the Freescale MMA8453Q and MMA8452Q via i
 			
 Dependencies:	
 	none
-	
+```	
 			
 List of Functions:
 
+```
 Function: setI2CAddr
 Description: set the i2c device address to a new value, default is 0x1C
 Parameters: (int) device address: a common value is 0x1D
@@ -91,4 +93,4 @@ Parameters: (int) *x pass x pointer
 	    (int) *y pass y pointer
 	    (int) *z pass z pointer
 Description: Compatibilty Function
-
+```
